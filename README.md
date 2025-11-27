@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 📖 Bible Reader App (Mandarin Learning Tool)
 
-## Getting Started
+A modern, full-featured Bible reading application designed to help users learn Traditional Chinese (Taiwan) through scripture. This application bridges the gap between language learning and spiritual study by integrating real-time Pinyin generation, native text-to-speech audio, and an interactive dictionary.
 
-First, run the development server:
+## ✨ Key Features
 
+### 📚 Reading Experience
+-   **Multi-Language Support:** Seamlessly read verses in Traditional Chinese (Taiwan) alongside English and Indonesian translations.
+-   **Smart Layout:** "Flowing text" design that mimics natural reading while keeping interactive elements accessible.
+-   **Visual Aids:** Toggleable Pinyin guides above Chinese characters to assist with pronunciation.
+
+### 🎧 Audio & Accessibility
+-   **Granular Playback Control:**
+    -   **Chapter Level:** Listen to the entire chapter continuously.
+    -   **Verse Level:** Play audio for specific verses.
+    -   **Word Level:** Click any word to hear its individual pronunciation.
+-   **Speed Control:** Adjustable playback speed (0.1x - 2.0x) for language learners.
+-   **Voice Selection:** Choose between available browser voices (e.g., Taiwan/Mainland accents).
+
+### 🧠 Interactive Learning
+-   **Smart Popup:** Click any Chinese word to view:
+    -   Pinyin (with tone marks).
+    -   Main translation.
+    -   Detailed definitions (Noun, Verb, Adjective) fetched via Dictionary API.
+-   **Vocabulary Management:** Save words to a personal "Favorites" list.
+-   **Review System:** Users can edit definitions manually or auto-fetch updated meanings for their saved words.
+
+### 🛡️ Admin CMS
+-   **Content Management:** Secure admin dashboard for uploading Bible chapters.
+-   **Smart Parsing:** Auto-detects verse numbers and splits text automatically (no manual formatting required).
+-   **Auto-Pinyin Titles:** Automatically generates Pinyin for book titles upon upload.
+-   **Database Management:** Ability to delete books and clear related data cleanly.
+
+## 🛠 Tech Stack
+
+-   **Frontend:** [Next.js 14](https://nextjs.org/) (App Router, React Server Components)
+-   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+-   **Backend & Database:** [Firebase](https://firebase.google.com/) (Firestore NoSQL & Authentication)
+-   **Authentication:** Firebase Auth (Google & Email/Password)
+-   **Audio Engine:** Web Speech API (Native Browser TTS)
+-   **Linguistics:** `pinyin` library & `Intl.Segmenter` for Chinese word segmentation.
+
+## 🚀 Getting Started
+
+Follow these steps to run the project locally.
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone [https://github.com/your-username/bible-reader-app.git](https://github.com/your-username/bible-reader-app.git)
+cd bible-reader-app
