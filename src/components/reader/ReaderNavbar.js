@@ -1,13 +1,16 @@
 import Link from "next/link";
 
-export default function ReaderNavbar({ bookId, bookName, chapter, settings, audio }) {
+export default function ReaderNavbar({ bookId, bookName, chapter, settings, audio, versions }) {
     const { voices, selectedVoiceURI, handleVoiceChange } = audio;
 
     return (
         <nav className="bg-white sticky top-0 z-40 px-4 py-3 shadow-sm border-b border-gray-100">
             <div className="max-w-3xl mx-auto flex flex-col gap-3">
 
-                <div className="flex justify-between items-center">
+                {/* TOP ROW: Back - Title - Saved */}
+                <div className="flex justify-between items-center relative">
+
+                    {/* LEFT: Back Button */}
                     <Link
                         href={`/read/${bookId}`}
                         className="text-gray-500 font-medium hover:text-gray-800 transition flex items-center gap-1 min-w-[3rem]"
@@ -15,13 +18,38 @@ export default function ReaderNavbar({ bookId, bookName, chapter, settings, audi
                         <span>←</span> Back
                     </Link>
 
-                    <h1 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                        <span className="line-clamp-1">{bookName}</span>
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-sm flex-shrink-0">
-                            {chapter}
-                        </span>
-                    </h1>
+                    {/* CENTER: Title & Versions */}
+                    <div className="flex flex-col items-center flex-1 px-2">
+                        <h1 className="font-bold text-lg text-gray-800 flex items-center justify-center gap-2 text-center leading-tight">
+                            <span className="line-clamp-1">{bookName}</span>
+                            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-sm flex-shrink-0">
+                                {chapter}
+                            </span>
+                        </h1>
 
+                        {/* VERSION BADGES (Menampilkan Versi Aktif) */}
+                        {versions && (
+                            <div className="flex flex-wrap justify-center gap-2 mt-1.5">
+                                {versions.cn && (
+                                    <span className="text-[10px] font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100">
+                                        CN: {versions.cn}
+                                    </span>
+                                )}
+                                {versions.en && (
+                                    <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">
+                                        EN: {versions.en}
+                                    </span>
+                                )}
+                                {versions.id && (
+                                    <span className="text-[10px] font-bold bg-green-50 text-green-600 px-1.5 py-0.5 rounded border border-green-100">
+                                        ID: {versions.id}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* RIGHT: Saved Words Button */}
                     <Link
                         href="/favorites"
                         className="text-yellow-400 hover:text-yellow-600 transition p-1.5 rounded-full hover:bg-yellow-50 min-w-[3rem] flex justify-end"
@@ -33,42 +61,48 @@ export default function ReaderNavbar({ bookId, bookName, chapter, settings, audi
                     </Link>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-4 text-sm bg-gray-50 p-2 rounded-lg">
-                    <label className="flex items-center gap-2 cursor-pointer select-none hover:text-blue-600 transition">
+                {/* BOTTOM ROW: Settings Bar */}
+                <div className="flex flex-wrap items-center justify-center gap-3 text-sm bg-gray-50 p-2 rounded-lg">
+                    {/* Toggles */}
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-blue-600 transition px-1">
                         <input
                             type="checkbox"
                             checked={settings.showPinyin}
                             onChange={() => settings.setSettings(prev => ({ ...prev, showPinyin: !prev.showPinyin }))}
-                            className="accent-blue-600"
+                            className="accent-blue-600 w-4 h-4"
                         />
                         Pinyin
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer select-none hover:text-blue-600 transition">
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-blue-600 transition px-1">
                         <input
                             type="checkbox"
                             checked={settings.showEnglish}
                             onChange={() => settings.setSettings(prev => ({ ...prev, showEnglish: !prev.showEnglish }))}
-                            className="accent-blue-600"
+                            className="accent-blue-600 w-4 h-4"
                         />
-                        English
+                        EN
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer select-none hover:text-red-600 transition">
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none hover:text-green-600 transition px-1">
                         <input
                             type="checkbox"
                             checked={settings.showIndonesian}
                             onChange={() => settings.setSettings(prev => ({ ...prev, showIndonesian: !prev.showIndonesian }))}
-                            className="accent-red-600"
+                            className="accent-green-600 w-4 h-4"
                         />
-                        Indo
+                        ID
                     </label>
+
+                    <div className="h-5 w-[1px] bg-gray-300 mx-1"></div>
+
+                    {/* Audio Selector */}
                     <select
                         value={selectedVoiceURI}
                         onChange={(e) => handleVoiceChange(e.target.value)}
-                        className="border rounded px-2 py-1 text-xs max-w-[150px] cursor-pointer hover:border-blue-500 outline-none bg-white"
+                        className="border border-gray-300 rounded px-2 py-1 text-xs max-w-[120px] cursor-pointer hover:border-blue-500 outline-none bg-white truncate"
                     >
                         {voices.length === 0 && <option>Default Voice</option>}
                         {voices.map(v => (
-                            <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
+                            <option key={v.voiceURI} value={v.voiceURI}>{v.name.replace(/Google|Microsoft|Apple/g, '').trim()}</option>
                         ))}
                     </select>
                 </div>

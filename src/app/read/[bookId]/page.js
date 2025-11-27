@@ -1,42 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { getBookInfo } from "@/lib/bibleData";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 export default function ChapterSelectPage() {
     const { bookId } = useParams();
-    const [chapters, setChapters] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const book = getBookInfo(bookId); // Ambil info buku dari file statis
 
-    useEffect(() => {
-        async function fetchChapters() {
-            try {
-                // Ambil subcollection 'chapters' dari document buku
-                const querySnapshot = await getDocs(collection(db, "books", bookId, "chapters"));
-                const list = querySnapshot.docs.map(doc => doc.data().number);
-                // Urutkan 1, 2, 3...
-                list.sort((a, b) => a - b);
-                setChapters(list);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
-        }
-        if (bookId) fetchChapters();
-    }, [bookId]);
+    if (!book) return <div className="p-10 text-center">Book not found.</div>;
 
-    if (loading) return <div className="p-10 text-center">Loading Chapters...</div>;
+    // Bikin array angka [1, 2, 3 ... 50]
+    const chapters = Array.from({ length: book.chapters }, (_, i) => i + 1);
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-md mx-auto">
                 <div className="flex items-center gap-4 mb-6">
-                    <Link href="/read" className="text-gray-500 hover:text-gray-900">← Back</Link>
-                    <h1 className="text-2xl font-bold text-gray-900">{bookId} Chapters</h1>
+                    <Link href="/read" className="text-gray-500 hover:text-gray-900 flex items-center gap-1">
+                        <span>←</span> Library
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">{book.name}</h1>
+                        <p className="text-sm text-gray-500">{book.cnName}</p>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-5 gap-3">
@@ -50,10 +37,6 @@ export default function ChapterSelectPage() {
                         </Link>
                     ))}
                 </div>
-
-                {chapters.length === 0 && (
-                    <p className="text-center text-gray-400 mt-10">No chapters found.</p>
-                )}
             </div>
         </div>
     );

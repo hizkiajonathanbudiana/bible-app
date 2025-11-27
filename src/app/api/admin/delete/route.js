@@ -10,29 +10,41 @@ export async function POST(request) {
 
         const batch = writeBatch(db);
 
-        // 1. Delete Dokumen Buku di collection 'books'
+        // 1. Delete Metadata Buku (Dari collection 'books')
         const bookRef = doc(db, "books", bookId);
         batch.delete(bookRef);
 
-        // 2. Delete Semua Ayat (Verses) yang bookId-nya sama
-        // Query dulu semua ayatnya
+        // 2. Delete Data Manual (Dari collection 'verses')
         const qVerses = query(collection(db, "verses"), where("bookId", "==", bookId));
         const versesSnap = await getDocs(qVerses);
         versesSnap.forEach((doc) => {
             batch.delete(doc.ref);
         });
 
-        // 3. Delete Subcollection Chapters (Optional tapi bersih)
+        // 3. Delete Subcollection Chapters Manual (Jika ada)
         const qChapters = collection(db, "books", bookId, "chapters");
         const chaptersSnap = await getDocs(qChapters);
         chaptersSnap.forEach((doc) => {
             batch.delete(doc.ref);
         });
 
-        // Jalankan penghapusan massal
+        // 4. [PENTING] Delete Cache (Dari collection 'chapters_cache')
+        // Karena ID Cache formatnya 'GEN_1', 'GEN_2', kita tidak bisa query 'where bookId'.
+        // Firestore tidak support regex delete.
+        // TAPI, kita bisa fetch semua doc di chapters_cache dan filter manual (agak mahal tapi bersih),
+        // ATAU kita asumsikan kita delete sampai 150 chapter (aman buat semua buku).
+
+        // Kita pakai cara aman: Loop delete berdasarkan kemungkinan chapter
+        // Maksimal pasal di Alkitab 150 (Mazmur).
+        for (let i = 1; i <= 150; i++) {
+            const cacheId = `${bookId}_${i}`;
+            const cacheRef = doc(db, "chapters_cache", cacheId);
+            batch.delete(cacheRef);
+        }
+
         await batch.commit();
 
-        return NextResponse.json({ success: true, message: `Deleted ${bookId} and ${versesSnap.size} verses.` });
+        return NextResponse.json({ success: true, message: `Deleted book ${bookId} and all its chapters/cache.` });
 
     } catch (error) {
         console.error(error);

@@ -1,146 +1,79 @@
-// import { db } from "@/lib/firebase";
-// import { parseChapterInput } from "@/lib/chinese-processor";
-// import { writeBatch, doc } from "firebase/firestore";
-// import { NextResponse } from "next/server";
-// import pinyin from "pinyin";
-
-// export async function POST(request) {
-//     try {
-//         const body = await request.json();
-//         const { bookId, bookName, chapter, rawTextCN, rawTextEN } = body;
-
-//         if (!bookId || !chapter || !rawTextCN) {
-//             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-//         }
-
-//         // --- LOGIC BARU: PINYIN WITH TONES & SPACE ---
-//         // 1. Generate Pinyin dengan Nada (Tone)
-//         const pinyinArray = pinyin(bookName, {
-//             style: pinyin.STYLE_TONE, // a -> ā (Pakai nada)
-//         });
-
-//         // 2. Ratakan array dan gabung pakai SPASI biar kebaca
-//         // Contoh: "gē lín duō qián shū"
-//         const pinyinString = pinyinArray.flat().join(" ");
-
-//         // 3. Format Judul Akhir: "Mandarin (Pinyin)"
-//         // Contoh: "哥林多前書 (gē lín duō qián shū)"
-//         // Kita kasih kurung biar rapi dan ada jeda jelas sama nomor pasal nanti
-//         const finalBookName = bookName.includes(pinyinString)
-//             ? bookName
-//             : `${bookName} (${pinyinString})`;
-
-//         // ----------------------------------------------
-
-//         // 1. Parse Ayat
-//         const versesData = parseChapterInput(rawTextCN, rawTextEN);
-//         if (versesData.length === 0) {
-//             return NextResponse.json({ error: "No valid verses found." }, { status: 400 });
-//         }
-
-//         const batch = writeBatch(db);
-
-//         // 2. Simpan Ayat
-//         versesData.forEach((v) => {
-//             const docId = `${bookId}_${chapter}_${v.verse}`;
-//             const docRef = doc(db, "verses", docId);
-//             batch.set(docRef, {
-//                 bookId,
-//                 bookName: finalBookName, // Nama baru
-//                 chapter: parseInt(chapter),
-//                 verse: v.verse,
-//                 text: v.text,
-//                 englishText: v.englishText,
-//                 segments: v.segments,
-//                 createdAt: new Date().toISOString(),
-//             });
-//         });
-
-//         // 3. Simpan Metadata Buku (Catalog)
-//         const bookRef = doc(db, "books", bookId);
-//         batch.set(bookRef, {
-//             id: bookId,
-//             name: finalBookName, // Nama baru
-//             lastUpdated: new Date().toISOString()
-//         }, { merge: true });
-
-//         // 4. Simpan Metadata Chapter
-//         const chapterRef = doc(db, "books", bookId, "chapters", chapter.toString());
-//         batch.set(chapterRef, {
-//             number: parseInt(chapter),
-//             exists: true
-//         });
-
-//         await batch.commit();
-
-//         return NextResponse.json({
-//             success: true,
-//             message: `Saved ${versesData.length} verses for ${finalBookName}.`,
-//         });
-
-//     } catch (error) {
-//         console.error("Processing Error:", error);
-//         return NextResponse.json({ error: error.message }, { status: 500 });
-//     }
-// }
-
 import { db } from "@/lib/firebase";
 import { parseChapterInput } from "@/lib/chinese-processor";
-import { writeBatch, doc } from "firebase/firestore";
+import { writeBatch, doc, setDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import pinyin from "pinyin";
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        // Tambah rawTextID di destructuring
-        const { bookId, bookName, chapter, rawTextCN, rawTextEN, rawTextID } = body;
+        const {
+            bookId, bookName, chapter,
+            rawTextCN, rawTextEN, rawTextID,
+            // Ambil data versi dari form admin
+            versionCN, versionEN, versionID
+        } = body;
 
         if (!bookId || !chapter || !rawTextCN) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Logic Pinyin Title
-        const pinyinArray = pinyin(bookName, { style: pinyin.STYLE_TONE });
-        const pinyinString = pinyinArray.flat().join(" ");
-        const finalBookName = bookName.includes(pinyinString) ? bookName : `${bookName} (${pinyinString})`;
+        // 1. Generate Judul Pinyin
+        let finalBookName = bookName;
+        try {
+            const pinyinArray = pinyin(bookName, { style: pinyin.STYLE_TONE });
+            const pinyinString = pinyinArray.flat().join(" ");
+            // Cek kalau belum ada pinyin
+            if (!bookName.includes("(")) {
+                finalBookName = `${bookName} (${pinyinString})`;
+            }
+        } catch (e) { }
 
-        // Logic Parse (Pass 3 bahasa)
+        // 2. Parse Text (Pake logic baru yang lebih kuat)
         const versesData = parseChapterInput(rawTextCN, rawTextEN, rawTextID);
 
         if (versesData.length === 0) {
-            return NextResponse.json({ error: "No valid verses found." }, { status: 400 });
+            return NextResponse.json({ error: "No valid verses found. Ensure text starts with numbers (e.g., '1 In the beginning...')" }, { status: 400 });
         }
 
         const batch = writeBatch(db);
 
-        versesData.forEach((v) => {
-            const docId = `${bookId}_${chapter}_${v.verse}`;
-            const docRef = doc(db, "verses", docId);
-            batch.set(docRef, {
-                bookId,
-                bookName: finalBookName,
-                chapter: parseInt(chapter),
-                verse: v.verse,
-                text: v.text,
-                englishText: v.englishText,
-                indonesianText: v.indonesianText, // Simpan ke DB
-                segments: v.segments,
-                createdAt: new Date().toISOString(),
-            });
-        });
+        // 3. Simpan Ayat
+        // Kita tidak simpan ke collection 'verses' lagi karena Reader sekarang baca dari 'chapters_cache'
+        // TAPI: Untuk Admin fitur 'Manage', mungkin nanti butuh.
+        // UNTUK SEKARANG: Kita fokus update CACHE yang dibaca Reader.
 
+        // Structure Data yang sama persis dengan output API Route Reader
+        const cacheData = {
+            bookName: finalBookName,
+            chapter: parseInt(chapter),
+            verses: versesData,
+            versions: {
+                cn: versionCN || "Manual",
+                en: versionEN || "Manual",
+                id: versionID || "Manual"
+            },
+            updatedAt: new Date().toISOString()
+        };
+
+        // Simpan ke 'chapters_cache' (Ini yang dibaca Reader Page)
+        const docId = `${bookId}_${chapter}`;
+        const cacheRef = doc(db, "chapters_cache", docId);
+        batch.set(cacheRef, cacheData);
+
+        // 4. Simpan Metadata Buku (Library List)
         const bookRef = doc(db, "books", bookId);
-        batch.set(bookRef, { id: bookId, name: finalBookName, lastUpdated: new Date().toISOString() }, { merge: true });
-
-        const chapterRef = doc(db, "books", bookId, "chapters", chapter.toString());
-        batch.set(chapterRef, { number: parseInt(chapter), exists: true });
+        batch.set(bookRef, {
+            id: bookId,
+            name: finalBookName,
+            lastUpdated: new Date().toISOString()
+        }, { merge: true });
 
         await batch.commit();
 
         return NextResponse.json({
             success: true,
-            message: `Saved ${versesData.length} verses for ${finalBookName}.`,
+            message: `Successfully saved ${versesData.length} verses (v: ${versionCN}/${versionEN}/${versionID}).`,
         });
 
     } catch (error) {

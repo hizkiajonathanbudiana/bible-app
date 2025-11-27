@@ -1,76 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { BIBLE_BOOKS } from "@/lib/bibleData";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext"; // Import Auth buat cek admin
-
-// Pastikan list ini SAMA dengan yang di admin page
-const ALLOWED_ADMINS = ["admin@test.com", "weize@test.com", "hizkia.jonathanb@gmail.com"];
 
 export default function LibraryPage() {
-    const [books, setBooks] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const { user } = useAuth(); // Ambil data user
-
-    useEffect(() => {
-        async function fetchBooks() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "books"));
-                const list = querySnapshot.docs.map(doc => doc.data());
-                setBooks(list);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchBooks();
-    }, []);
-
-    if (loading) return <div className="p-10 text-center">Loading Library...</div>;
-
-    const isAdmin = user && ALLOWED_ADMINS.includes(user.email);
-
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 p-6 pb-20">
             <div className="max-w-md mx-auto">
+
+                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Library</h1>
-                    <Link href="/" className="text-sm text-gray-500 hover:text-gray-900">Back Home</Link>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Scripture Library</h1>
+                        <p className="text-xs text-gray-500 mt-1">Select a book to start reading</p>
+                    </div>
+                    <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                        Home
+                    </Link>
                 </div>
 
+                {/* Book List Grid */}
                 <div className="grid gap-3">
-                    {books.length === 0 ? (
-                        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-                            <p className="text-gray-400 mb-4">No books available yet.</p>
-
-                            {/* HANYA MUNCUL KALAU ADMIN */}
-                            {isAdmin && (
-                                <Link
-                                    href="/admin"
-                                    className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-200 transition"
-                                >
-                                    + Upload in Admin
-                                </Link>
-                            )}
-                        </div>
-                    ) : (
-                        books.map((book) => (
-                            <Link
-                                key={book.id}
-                                href={`/read/${book.id}`}
-                                className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:border-blue-500 hover:shadow-md transition group"
-                            >
-                                <div>
-                                    <h2 className="text-lg font-bold text-gray-800 group-hover:text-blue-700 transition">{book.name}</h2>
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{book.id}</p>
+                    {BIBLE_BOOKS.map((book) => (
+                        <Link
+                            key={book.id}
+                            href={`/read/${book.id}`}
+                            className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:border-blue-500 hover:shadow-md transition group active:scale-[0.99]"
+                        >
+                            <div className="flex items-center gap-4">
+                                {/* Avatar Singkatan Buku */}
+                                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+                                    {book.id.substring(0, 2)}
                                 </div>
-                                <span className="text-gray-300 group-hover:text-blue-500 transition">➜</span>
-                            </Link>
-                        ))
-                    )}
+
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-800 group-hover:text-blue-700 transition">
+                                        {book.name}
+                                        <span className="ml-2 text-gray-400 font-normal text-sm">{book.cnName}</span>
+                                    </h2>
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
+                                        {book.chapters} Chapters
+                                    </p>
+                                </div>
+                            </div>
+
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition">
+                                <path fillRule="evenodd" d="M16.28 11.47a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 01-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 011.06-1.06l7.5 7.5z" clipRule="evenodd" />
+                            </svg>
+                        </Link>
+                    ))}
                 </div>
             </div>
         </div>
