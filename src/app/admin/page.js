@@ -1,4 +1,17 @@
-// "use client";
+"use client";
+
+export default function AdminPage() {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="bg-white shadow rounded-lg p-10 text-center">
+                <h1 className="text-3xl font-bold text-gray-700">Admin Panel</h1>
+                <p className="text-gray-500 mt-4">
+                    This page is intentionally left empty.
+                </p>
+            </div>
+        </div>
+    );
+}// "use client";
 
 // import { useState, useEffect } from "react";
 // import { useAuth } from "@/context/AuthContext";
