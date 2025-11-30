@@ -1,101 +1,119 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [status, setStatus] = useState("Checking session...");
 
-  // Kalau loading, tampilkan spinner
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  useEffect(() => {
+    let isMounted = true;
 
-  // Kalau belum login, arahkan ke login page
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+    async function checkLastRead() {
+      // 1. Jika belum login atau masih loading, jangan ngapa-ngapain
+      if (loading || !user) return;
+
+      setStatus("Syncing last reading...");
+
+      try {
+        // 2. Ambil data dari Firestore
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (isMounted && docSnap.exists() && docSnap.data().lastRead) {
+          const lr = docSnap.data().lastRead;
+
+          // Validasi data
+          if (lr.version && lr.bookId && lr.chapter) {
+            // 3. Susun URL
+            let url = `/read/${lr.version}/${lr.bookId}/${lr.chapter}`;
+            const params = new URLSearchParams();
+            if (lr.enVer) params.set("en", lr.enVer);
+            if (lr.indVer) params.set("ind", lr.indVer);
+
+            const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
+
+            console.log("Found history, redirecting to:", fullUrl);
+            router.replace(fullUrl);
+            return;
+          }
+        }
+
+        // 4. Kalau tidak ada history, biarkan di halaman ini
+        if (isMounted) setStatus("Ready");
+
+      } catch (e) {
+        console.error("Error redirecting:", e);
+        if (isMounted) setStatus("Ready");
+      }
+    }
+
+    checkLastRead();
+
+    return () => { isMounted = false; };
+  }, [user, loading, router]);
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push("/login");
+    router.replace("/login");
   };
+
+  // TAMPILAN LOADING (Sampai status "Ready" atau Redirect terjadi)
+  if (loading || status !== "Ready") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-gray-400 text-sm font-medium animate-pulse">{status}</p>
+      </div>
+    );
+  }
+
+  // TAMPILAN MENU (Hanya muncul jika User Baru / Belum ada History)
+  if (!user) {
+    router.replace("/login");
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-
-        {/* Header Profile */}
         <div className="bg-blue-600 p-6 text-center">
-          <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center text-3xl mb-3 shadow-inner">
-            👋
-          </div>
-          <h1 className="text-white text-xl font-bold">Welcome Back!</h1>
+          <h1 className="text-white text-xl font-bold">Welcome!</h1>
           <p className="text-blue-100 text-sm">{user.email}</p>
         </div>
 
-        {/* Menu Grid */}
         <div className="p-6 grid gap-4">
-
-          {/* Menu 1: Start Reading (Updated to Library) */}
-          <Link href="/read" className="group block p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md transition bg-gray-50">
+          <Link href="/read" className="block p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md transition bg-white">
             <div className="flex items-center gap-4">
-              <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
-                📖
-              </div>
+              <span className="text-2xl">📖</span>
               <div>
-                <h3 className="font-bold text-gray-800 group-hover:text-blue-600">Read Scripture</h3>
-                <p className="text-xs text-gray-500">Select Book & Chapter</p>
+                <h3 className="font-bold text-gray-800">Bible Library</h3>
+                <p className="text-xs text-gray-500">Start reading now</p>
               </div>
             </div>
           </Link>
 
-          {/* Menu 2: My Vocabulary */}
-          <Link href="/favorites" className="group block p-4 border border-gray-200 rounded-xl hover:border-yellow-500 hover:shadow-md transition bg-gray-50">
+          <Link href="/favorites" className="block p-4 border border-gray-200 rounded-xl hover:border-yellow-500 hover:shadow-md transition bg-white">
             <div className="flex items-center gap-4">
-              <div className="bg-yellow-100 text-yellow-600 p-3 rounded-lg">
-                ⭐
-              </div>
+              <span className="text-2xl">⭐</span>
               <div>
-                <h3 className="font-bold text-gray-800 group-hover:text-yellow-600">My Vocabulary</h3>
-                <p className="text-xs text-gray-500">Review your saved words</p>
+                <h3 className="font-bold text-gray-800">My Vocabulary</h3>
+                <p className="text-xs text-gray-500">Your saved words</p>
               </div>
             </div>
           </Link>
-
-          {/* Menu 3: Admin (Hanya muncul kalau emailnya cocok) */}
-          {["admin@test.com", "weize@test.com", "hizkia.jonathanb@gmail.com"].includes(user.email) && (
-            <Link href="/admin" className="group block p-4 border border-gray-200 rounded-xl hover:border-red-500 hover:shadow-md transition bg-gray-50">
-              <div className="flex items-center gap-4">
-                <div className="bg-red-100 text-red-600 p-3 rounded-lg">
-                  ⚙️
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800 group-hover:text-red-600">Admin Panel</h3>
-                  <p className="text-xs text-gray-500">Upload new chapters</p>
-                </div>
-              </div>
-            </Link>
-          )}
-
         </div>
 
-        {/* Footer Logout */}
         <div className="bg-gray-50 p-4 border-t text-center">
-          <button
-            onClick={handleLogout}
-            className="text-gray-500 text-sm font-medium hover:text-red-500 transition flex items-center justify-center gap-2 w-full py-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-            </svg>
-            Sign Out
-          </button>
+          <button onClick={handleLogout} className="text-red-500 text-sm font-bold hover:underline">Sign Out</button>
         </div>
-
       </div>
     </div>
   );

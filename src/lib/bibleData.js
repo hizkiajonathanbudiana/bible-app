@@ -1,19 +1,110 @@
 // src/lib/bibleData.js
 
-// KODE VERSI BOLLS.LIFE (FIXED)
-export const BOLLS_VERSIONS = {
-    // Mandarin: CUV (Chinese Union Version - Traditional)
-    // Ini standar Alkitab Mandarin di Bolls.
-    CN: ['CUV'],
+export const CURATED_TRANSLATIONS = [
+    // --- INDONESIAN ---
+    {
+        "id": "ind_ags",
+        "name": "Alkitab Gratis untuk Semua",
+        "englishName": "Indonesian Bible for All",
+        "language": "ind"
+    },
+    {
+        "id": "ind_ayt",
+        "name": "Alkitab Yang Terbuka",
+        "englishName": "Indonesian AYT Bible",
+        "language": "ind"
+    },
+    {
+        "id": "ind_obo",
+        "name": "Alkitab Terjemahan Sederhana Indonesia, Edisi Ketiga",
+        "englishName": "Indonesian Bible (TSI)",
+        "language": "ind"
+    },
 
-    // English: WEB (World English Bible) - Bahasa modern, public domain
-    EN: ['NIV', 'WEB', 'KJV'],
+    // --- CHINESE ---
+    {
+        "id": "cmn_cbs",
+        "name": "Biblica® 圣经当代译本开放资源",
+        "englishName": "Mandarin Chinese Open Contemporary Bible (Simplified)",
+        "language": "cmn"
+    },
+    {
+        "id": "cmn_cbt",
+        "name": "Biblica® 聖經，當代譯本開放資源",
+        "englishName": "Chinese, Mandarin: Biblica® 聖經,當代譯本開放資源 (Bible)",
+        "language": "cmn"
+    },
+    {
+        "id": "cmn_cu1",
+        "name": "新标点和合本",
+        "englishName": "Chinese Union Version (simplified)",
+        "language": "cmn"
+    },
+    {
+        "id": "cmn_cuv",
+        "name": "新標點和合本",
+        "englishName": "Chinese Union Version (traditional)",
+        "language": "cmn"
+    },
+    {
+        "id": "cmn_feb",
+        "name": "免费的易读圣经 Free Easy-to-read Bible",
+        "englishName": "Chinese, Mandarin: 免费的易读圣经 Free Easy-to-read Bible (Bible)",
+        "language": "cmn"
+    },
 
-    // Indonesia: TB (Terjemahan Baru) - Sesuai data yang lu kasih
-    ID: ['TB']
-};
+    // --- ENGLISH ---
+    {
+        "id": "BSB",
+        "name": "Berean Standard Bible",
+        "englishName": "Berean Standard Bible",
+        "language": "eng"
+    },
+    {
+        "id": "ENGWEBP",
+        "name": "World English Bible",
+        "englishName": "World English Bible",
+        "language": "eng"
+    },
+    {
+        "id": "eng_kjv",
+        "name": "King James (Authorized) Version",
+        "englishName": "King James Version",
+        "language": "eng"
+    },
+    {
+        "id": "eng_net",
+        "name": "NET Bible",
+        "englishName": "NET Bible",
+        "language": "eng"
+    },
+    {
+        "id": "eng_asv",
+        "name": "American Standard Version (1901)",
+        "englishName": "American Standard Version (1901)",
+        "language": "eng"
+    },
+    {
+        "id": "eng_ylt",
+        "name": "Young's Literal Translation",
+        "englishName": "Young's Literal Translation",
+        "language": "eng"
+    },
+    {
+        "id": "eng_bbe",
+        "name": "Bible in Basic English",
+        "englishName": "Bible in Basic English",
+        "language": "eng"
+    },
+    {
+        "id": "eng_web",
+        "name": "World English Bible Classic",
+        "englishName": "World English Bible Classic",
+        "language": "eng"
+    }
+];
 
-// MAPPING BUKU (ID Bolls pakai Angka 1-66)
+// MAPPING BUKU LENGKAP
 export const BIBLE_BOOKS = [
     { id: "GEN", name: "Genesis", cnName: "創世記", chapters: 50, bollsId: 1 },
     { id: "EXO", name: "Exodus", cnName: "出埃及記", chapters: 40, bollsId: 2 },

@@ -1,20 +1,60 @@
+"use client";
+
 export default function VerseList({ verses, settings, audio, onWordClick }) {
     const { isPlaying, currentScope, playText } = audio;
-    // Tambah showIndonesian
-    const { showPinyin, showEnglish, showIndonesian, fontSize } = settings;
+
+    // Ambil semua setting termasuk Dark Mode
+    const { showPinyin, showEnglish, showIndonesian, fontSize, isDarkMode } = settings;
+
+    // --- THEME CONFIGURATION ---
+    const theme = {
+        cardBg: isDarkMode
+            ? "bg-gray-900 border-gray-800 hover:border-gray-700"
+            : "bg-white border-gray-100 hover:border-blue-300",
+
+        textMain: isDarkMode ? "text-gray-100" : "text-gray-900",
+        textSub: isDarkMode ? "text-gray-400" : "text-gray-600",
+
+        verseNum: isDarkMode ? "text-gray-500" : "text-gray-400",
+
+        borderTop: isDarkMode ? "border-gray-800" : "border-gray-100",
+        borderLeft: isDarkMode ? "border-green-900" : "border-green-200",
+
+        charHover: isDarkMode
+            ? "hover:bg-gray-700 hover:text-blue-300"
+            : "hover:bg-blue-100 hover:text-blue-800",
+
+        pinyin: isDarkMode ? "text-gray-500" : "text-gray-400",
+
+        activeAudioBtn: "text-red-500 bg-red-50 scale-110 shadow-sm",
+        inactiveAudioBtn: isDarkMode
+            ? "text-gray-600 hover:text-blue-400 hover:bg-gray-800"
+            : "text-blue-300 hover:text-blue-600 hover:bg-blue-50"
+    };
 
     return (
-        <main className="max-w-3xl mx-auto p-4 space-y-6">
+        <main className="max-w-4xl mx-auto p-4 space-y-4">
             {verses.map((verse) => (
-                <div key={verse.verse} className="bg-white p-5 rounded-xl border border-gray-100 hover:shadow-lg transition-all duration-300">
-                    <div className="flex gap-3 items-start">
+                <div
+                    key={verse.verse}
+                    id={`verse-${verse.verse}`} // PENTING: Untuk Auto Scroll
+                    className={`${theme.cardBg} p-5 rounded-xl shadow-sm border transition-all duration-200`}
+                >
+                    <div className="flex gap-4 items-start">
 
-                        {/* Speaker Button */}
+                        {/* --- KOLOM KIRI: NOMOR AYAT & AUDIO --- */}
                         <div className="flex flex-col items-center gap-2 pt-1 min-w-[2.5rem] flex-shrink-0">
-                            <span className="font-serif font-bold text-gray-400 text-sm select-none">{verse.verse}</span>
+                            <span className={`font-serif font-bold text-sm select-none ${theme.verseNum}`}>
+                                {verse.verse}
+                            </span>
+
                             <button
                                 onClick={() => playText(verse.text, `verse-${verse.verse}`)}
-                                className={`p-2 rounded-full transition-all ${isPlaying && currentScope === `verse-${verse.verse}` ? 'text-red-500 bg-red-50 scale-110 shadow-sm' : 'text-blue-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                className={`p-2 rounded-full transition-all ${isPlaying && currentScope === `verse-${verse.verse}`
+                                    ? theme.activeAudioBtn
+                                    : theme.inactiveAudioBtn
+                                    }`}
+                                title="Play Audio"
                             >
                                 {isPlaying && currentScope === `verse-${verse.verse}` ? (
                                     <div className="flex gap-0.5 h-3 items-end justify-center">
@@ -30,24 +70,31 @@ export default function VerseList({ verses, settings, audio, onWordClick }) {
                             </button>
                         </div>
 
-                        {/* Text Content */}
-                        <div className="flex-1">
-                            {/* Mandarin Text */}
-                            <div className="text-gray-800 leading-[2.5] tracking-wide" style={{ fontSize: `${fontSize}rem` }}>
+                        {/* --- KOLOM KANAN: ISI TEKS --- */}
+                        <div className="flex-1 space-y-3">
+
+                            {/* 1. MANDARIN TEXT */}
+                            <div
+                                className={`${theme.textMain} leading-[2.2] tracking-wide font-medium flex flex-wrap`}
+                                style={{ fontSize: `${fontSize}rem` }}
+                            >
                                 {verse.segments.map((seg, idx) => (
                                     <span
                                         key={idx}
                                         onClick={() => { if (/[\u4e00-\u9fa5]/.test(seg.text)) onWordClick(seg) }}
                                         className={`
                                             inline-flex flex-col-reverse justify-end items-center align-middle
-                                            cursor-pointer rounded-sm hover:bg-blue-100 transition-colors duration-100
-                                            mx-[1px]
-                                            ${/[\u4e00-\u9fa5]/.test(seg.text) ? 'hover:text-blue-900' : ''}
+                                            cursor-pointer rounded-md transition-colors duration-150
+                                            mx-[2px] px-[1px]
+                                            ${/[\u4e00-\u9fa5]/.test(seg.text) ? theme.charHover : ''}
                                         `}
                                     >
                                         <span>{seg.text}</span>
                                         {showPinyin && seg.pinyin && (
-                                            <span className="text-gray-400 font-normal select-none pointer-events-none mb-[-0.3em]" style={{ fontSize: '0.45em' }}>
+                                            <span
+                                                className={`${theme.pinyin} font-light select-none pointer-events-none mb-[-0.2em] font-sans`}
+                                                style={{ fontSize: '0.45em' }}
+                                            >
                                                 {seg.pinyin}
                                             </span>
                                         )}
@@ -55,19 +102,35 @@ export default function VerseList({ verses, settings, audio, onWordClick }) {
                                 ))}
                             </div>
 
-                            {/* English Text */}
-                            {showEnglish && verse.englishText && (
-                                <p className="mt-4 text-gray-500 font-serif text-lg border-t border-gray-50 pt-3 leading-relaxed">
-                                    {verse.englishText}
-                                </p>
+                            {/* 2. ENGLISH TRANSLATION */}
+                            {showEnglish && (
+                                <div className={`pt-3 border-t ${theme.borderTop}`}>
+                                    {verse.englishText ? (
+                                        <p className={`${theme.textSub} font-serif leading-relaxed`} style={{ fontSize: `${fontSize * 0.65}rem` }}>
+                                            {verse.englishText}
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-red-300 italic opacity-50">No English data.</p>
+                                    )}
+                                </div>
                             )}
 
-                            {/* INDONESIAN TEXT (NEW) */}
-                            {showIndonesian && verse.indonesianText && (
-                                <p className="mt-2 text-gray-800 font-sans text-base leading-relaxed italic border-l-2 border-red-200 pl-3">
-                                    {verse.indonesianText}
-                                </p>
+                            {/* 3. INDONESIAN TRANSLATION */}
+                            {showIndonesian && (
+                                <div className="pt-1">
+                                    {verse.indonesianText ? (
+                                        <p
+                                            className={`${theme.textSub} font-sans italic leading-relaxed pl-3 border-l-2 ${theme.borderLeft}`}
+                                            style={{ fontSize: `${fontSize * 0.6}rem` }}
+                                        >
+                                            {verse.indonesianText}
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-red-300 italic opacity-50">No Indonesian data.</p>
+                                    )}
+                                </div>
                             )}
+
                         </div>
                     </div>
                 </div>
